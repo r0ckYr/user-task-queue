@@ -16,12 +16,13 @@ If the rate limit is exceeded, tasks are automatically queued and processed late
 git clone https://github.com/your-username/node-task-queuing-with-rate-limiting.git
 cd node-task-queuing-with-rate-limiting
 ```
-2. ```npm install```
+2. Install Dependencies
+```npm install```
 3. Setup Redis(using docker)
-```docker pull redis```
-```docker run --name my-redis -p 6379:6379 -d redis```
+```docker pull redis
+docker run --name my-redis -p 6379:6379 -d redis```
 4. Running the Application
-```node app.js
+```node app.js```
 
 
 ## Testing
