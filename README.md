@@ -19,8 +19,10 @@ cd node-task-queuing-with-rate-limiting
 2. Install Dependencies
 ```npm install```
 3. Setup Redis(using docker)
-```docker pull redis
-docker run --name my-redis -p 6379:6379 -d redis```
+```
+docker pull redis
+docker run --name my-redis -p 6379:6379 -d redis
+```
 4. Running the Application
 ```node app.js```
 
