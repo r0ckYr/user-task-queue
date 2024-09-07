@@ -27,10 +27,15 @@ docker run --name my-redis -p 6379:6379 -d redis
 ```node app.js```
 
 
+## Enviroment variables
+1. ```PORT=3000```
+2. ```REDIS_URL=http://localhost:6397```
+
+
 ## Testing
 
-Use curl
-```curl -X POST http://localhost:3000/task -H "Content-Type: application/json" -d '{"user_id": "123"}'```
+Using curl:
+```curl -X POST http://localhost:3000/task -H "Content-Type: application/json" -d '{"user_id": 123}'```
 
-
+## Logging
 Tasks are logged in the ```tasks.log``` file, located in the root directory of the project. Each log entry contains the user ID and the timestamp when the task was processed.
