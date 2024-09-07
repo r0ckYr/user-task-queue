@@ -31,6 +31,7 @@ const redisGetAsync = promisify(redisClient.get).bind(redisClient);
 const redisKeysAsync = promisify(redisClient.keys).bind(redisClient);
 const redisLpopAsync = promisify(redisClient.lpop).bind(redisClient);
 const redisRpushAsync = promisify(redisClient.rpush).bind(redisClient);
+const redisSetAsync = promisify(redisClient.set).bind(redisClient);
 
 app.use(express.json());
 
@@ -75,7 +76,10 @@ app.post("/task", async (req, res) => {
       res.json({ message: "Task processed successfully" });
     } else {
       // Queue the task
-      await redisRpushAsync(`task_queue:${user_id}`, JSON.stringify({ user_id }));
+      await redisRpushAsync(
+        `task_queue:${user_id}`,
+        JSON.stringify({ user_id }),
+      );
       res.json({ message: "Task queued for later processing" });
     }
   } catch (error) {
@@ -93,12 +97,25 @@ async function processQueuedTasks() {
 
     for (const userQueue of users) {
       const user_id = userQueue.split(":")[1];
-      const canProcess = await checkRateLimit(user_id);
-      if (canProcess) {
-        const queuedTask = await redisLpopAsync(userQueue);
-        if (queuedTask) {
-          const { user_id } = JSON.parse(queuedTask);
-          await task(user_id);
+
+      // Use a Redis lock to ensure only one worker processes the tasks for this user
+      const lockKey = `lock:${user_id}`;
+      const lockAcquired = await redisSetAsync(
+        lockKey,
+        "locked",
+        "NX",
+        "EX",
+        1,
+      ); // Lock for 1 second
+
+      if (lockAcquired === "OK") {
+        const canProcess = await checkRateLimit(user_id);
+        if (canProcess) {
+          const queuedTask = await redisLpopAsync(userQueue);
+          if (queuedTask) {
+            const { user_id } = JSON.parse(queuedTask);
+            await task(user_id);
+          }
         }
       }
     }
@@ -117,7 +134,7 @@ if (cluster.isMaster) {
 
   cluster.on("exit", (worker, code, signal) => {
     console.log(
-      `Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`
+      `Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`,
     );
     console.log("Starting a new worker");
     cluster.fork();
@@ -140,10 +157,7 @@ if (cluster.isMaster) {
     console.log(`Worker ${process.pid} started and listening on port ${PORT}`);
   });
 
-  // Process queued tasks in one worker only
-  if (cluster.worker.id === 1) {
-    setInterval(processQueuedTasks, 1000); // Run every second
-  }
+  setInterval(processQueuedTasks, 1000);
 }
 
 process.on("SIGINT", () => {
