@@ -13,8 +13,8 @@ If the rate limit is exceeded, tasks are automatically queued and processed late
 
 1. Clone the repo
 ```
-git clone https://github.com/your-username/node-task-queuing-with-rate-limiting.git
-cd node-task-queuing-with-rate-limiting
+git clone https://github.com/r0ckYr/user-task-queue.git
+cd user-task-queue.git
 ```
 2. Install Dependencies
 ```npm install```
